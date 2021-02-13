@@ -3,8 +3,6 @@ pragma solidity 0.6.6;
 import "https://raw.githubusercontent.com/smartcontractkit/chainlink/master/evm-contracts/src/v0.6/VRFConsumerBase.sol";
 
 
-// deployed at Rinkeby - 0xf821d5CEA7AfD121182430889d90926249F1058C
-
 contract AirdropBlockHeight is VRFConsumerBase {
 
     bytes32 internal keyHash;
@@ -54,7 +52,7 @@ contract AirdropBlockHeight is VRFConsumerBase {
      */
     function getRandomNumber(uint256 userProvidedSeed, uint256 high, uint256 low) public onlyOwner returns (bytes32 requestId) {
         require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK - fill contract with faucet");
-        require(high >= low, "High can't be lesser than low.");
+        require(high > low, "High must be larger than low.");
         blockHeightLow = low;
         blockHeightHigh = high;
         return requestRandomness(keyHash, fee, userProvidedSeed);
@@ -64,7 +62,7 @@ contract AirdropBlockHeight is VRFConsumerBase {
      * Callback function used by VRF Coordinator
      */
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
-        uint256 spread = blockHeightHigh - blockHeightLow;
+        uint256 spread = blockHeightHigh - blockHeightLow + 1; // inclusive on both sides
         uint256 mod = (randomness % spread);
         randomNumber = randomness;
         airdropHeights[airdropCount] = blockHeightLow + mod;
